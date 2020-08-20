@@ -1,0 +1,296 @@
+<html>
+	<head>
+		<style>
+			canvas{
+				   border  : 1px solid black;
+				  }
+		</style>
+	
+	 <canvas id="canvas" width="920" height ="530" onmousemove="showInfo(event)"></canvas>
+	 <textarea style="width:200px;height: 150px"id="information" ></textarea>
+	 <br>
+	 Type initVelocityX(m/s) here 
+	 <input type="number" id="initVelocityX" value="10">
+	 Type initVelocityY(m/s) here 
+	 <input type="number" id="initVelocityY" value="10">
+	 <input type="button" id="apply" onclick="apply()" value="Apply">
+	 <input type="button" id="fire" onclick="fire()" value="Fire">
+	 <input type="button"  onclick="location.reload()" value="Restart">
+	 <img id="Mercury" width="0" height="0" src="https://www.sciencesource.com/Doc/TR1_WATERMARKED/c/8/d/b/SS2194892.jpg?d63641560148">
+	 <img id="Venus" width="0" height="0" src="https://www.sciencesource.com/Doc/TR1_WATERMARKED/3/1/3/b/SS21555107.jpg?d63672432543">
+	 <img id="Earth" width="0" height="0" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Sierra_Nevada-terabass.jpg/1024px-Sierra_Nevada-terabass.jpg" >
+	 <img id="Moon" width="0" height="0" src="https://i.pinimg.com/originals/bc/7e/90/bc7e902dd2c12a88f9ccb9bb628758cf.jpg">
+	 <img id="Mars" width="0" height="0" src="https://content.presspage.com/uploads/1979/1920_190327-mars-sample-return-banner-149413.jpg?10000">
+	 <img id="Jupiter" width="0" height="0" src="https://i.redd.it/4hqxvr01gmj41.png">
+	 <img id="Saturn" width="0" height="0" src="https://www.syfy.com/sites/syfy/files/styles/1200x680_hero/public/cassini_finaldives_artwork.jpg">
+	 <img id="Uranus" width="0" height="0" src="https://solarstory.net/img/articles/big/artist-impression-of-uranus-atmosphere.jpg">
+	 <img id="Neptune" width="0" height="0" src="https://i.pinimg.com/originals/1d/b9/d6/1db9d6b7d743de60846767fcb5c1d1b4.jpg">
+	 <img id="Pluto" width="0" height="0" src="https://images.csmonitor.com/csm/2016/05/979747_1_0705-pluto_standard.jpg?alias=standard_900x600nc">
+	</head>
+   <body>   
+		<script>
+			
+			// global variables
+			var ball  = null;
+			var balls = new Array();
+			var i;
+			var initVelocityXValue=10,initVelocityYValue=10,initDisplacementYValue=0;
+			var gravity,img=null;
+			var planet = Math.floor((Math.random() * 10) + 1);
+			
+			
+			// global constants 
+			const canvas=document.getElementById("canvas");
+			const context=canvas.getContext('2d');
+			const rect = canvas.getBoundingClientRect();
+			const initDisplacementYBox = document.getElementById("initDisplacementY");
+			const initVelocityXBox = document.getElementById("initVelocityX");
+			const initVelocityYBox = document.getElementById("initVelocityY");
+			const textBox = document.getElementById("information");
+			
+			textBox.readOnly = true;
+			
+			// class creates balls that the player fires 
+			class Ball{
+			
+				constructor(initVelocityX,initVelocityY,color){
+				
+					this._centerX=0;
+					this._centerY=0;
+					this._initVelocityX=initVelocityX;
+					this._initVelocityY=initVelocityY;
+					this._velocityX=initVelocityX;
+					this._velocityY=initVelocityY;
+					this._color=color;
+					this._secondsPassed=0;
+				}
+				
+				set initVelocityX(newInitVelocityX){
+					
+					this._initVelocityX = newInitVelocityX;
+				}
+				
+				get initVelocityX(){
+				
+					return this._initVelocityX;
+				}
+				
+				set initVelocityY(newInitVelocityY){
+					
+					this._initVelocityY = newInitVelocityY;
+				}
+				
+				get initVelocityY(){
+				
+					return this._initVelocityY;
+				}
+				
+				set velocityX(newVelocityX){
+					
+					this._velocityX = newVelocityX;
+				}
+				
+				get velocityX(){
+				
+					return this._velocityX;
+				}
+				
+				set velocityY(newVelocityY){
+					
+					this._velocityY = newVelocityY;
+				}
+				
+				get velocityY(){
+				
+					return this._velocityY;
+				}
+				
+				set centerX(newCenterX){
+					
+					this._centerX = newCenterX;
+				}
+				
+				get centerX(){
+					
+					return this._centerX;
+				}
+				
+				set centerY(newCenterY){
+					
+					this._centerY = newCenterY;
+				}
+				
+				get centerY(){
+					
+					return this._centerY;
+				}
+				
+				set secondsPassed(newSecondsPassed){
+					this._secondsPassed=newSecondsPassed;
+				}
+				
+				get secondsPassed(){
+					return this._secondsPassed;
+				}
+				
+				set color(newColor){
+					this._color=newColor;
+				}
+				
+				get color(){
+					return this._color;
+				}
+				
+		
+			}
+			
+			function fire(){
+				
+				// create new balls when button is clicked 
+				ball = new Ball(initVelocityXValue,initVelocityYValue,"blue");
+				balls.push(ball);
+				
+			}
+			
+			function updateScreen(){
+				
+				context.clearRect(0,0, canvas.width,canvas.height);
+				
+				// draw background image 
+				context.drawImage(img, 0, 0,canvas.width,canvas.height);
+				
+				// update attributes of each ball
+				for(i=0;i<=balls.length-1;i++){
+					
+					balls[i].velocityY = gravity*balls[i].secondsPassed+balls[i].initVelocityY;
+					balls[i].velocityX=balls[i].initVelocityX;
+					
+					balls[i].centerX+=0.01*balls[i].velocityX;
+					balls[i].centerY+=0.01*balls[i].velocityY;
+					
+					balls[i].secondsPassed+=0.01;
+				
+				}
+				
+				
+				
+				// redraw each ball 
+				for(i=0;i<=balls.length-1;i++){
+						
+					context.fillStyle=balls[i].color;
+					context.beginPath();
+					context.arc(balls[i].centerX,-1*balls[i].centerY+530,15,0,2*Math.PI);
+					context.closePath();
+					context.fill();
+					
+				}
+				
+				
+				
+				// delete Ball object properties to save space in memory 
+				for(i=0;i<=balls.length-1;i++){
+				
+					// case when balls move of the screen
+					if(balls[i].centerX>1000 || balls[i].centerX<-100 || balls[i].centerY>650 || balls[i].centerY<-100 ){
+					
+						delete balls[i].centerX;
+						delete balls[i].centerY;
+						delete balls[i].initVelocityX;
+						delete balls[i].initVelocityY;
+						delete balls[i].color;
+						delete balls[i].secondsPassed;
+						
+				
+					
+					}
+				}
+			}
+			
+			function apply(){
+			
+				// input validation
+				if(!isNaN(initVelocityXBox.value)){
+				
+					if(0<Number(initVelocityXBox.value)){
+						initVelocityXValue = Number(initVelocityXBox.value);
+					}
+				}
+				
+				if(!isNaN(initVelocityYBox.value)){
+				
+					
+					initVelocityYValue = Number(initVelocityYBox.value);
+					
+				}
+			}
+
+			// set random planet location
+				
+			if(planet == 1){
+				gravity = -3.61;
+				img = document.getElementById("Mercury");
+			}
+			else if(planet == 2){
+				gravity = -8.83;
+				img = document.getElementById("Venus");
+			}
+			else if(planet == 3){
+				gravity = -9.8;
+				img = document.getElementById("Earth");
+			}
+			else if(planet == 4){
+				gravity = -1.6;
+				img = document.getElementById("Moon");
+			}
+			else if(planet == 5){
+				gravity = -3.75;
+				img = document.getElementById("Mars");
+			}
+			else if(planet == 6){
+				gravity = -26.0;
+				img = document.getElementById("Jupiter");
+			}
+			else if(planet == 7){
+				gravity = -11.2;
+				img = document.getElementById("Saturn");
+			}
+			else if(planet == 8){
+				gravity = -10.5;
+				img = document.getElementById("Uranus");
+			}
+			else if(planet == 9){
+				gravity = -13.3;
+				img = document.getElementById("Neptune");
+			}
+			else if(planet == 10){
+				gravity = -0.61;
+				img = document.getElementById("Pluto");
+			}
+			
+			// respond to "mousedown" event on canvas 
+			function showInfo(event){
+				
+				for(i=0;i<=balls.length-1;i++){
+					
+					// if a ball has been clicked on canvas 
+					if((((event.clientX-rect.left)-balls[i].centerX)**2)+(((event.clientY-rect.top)-balls[i].centerY)**2) <= 256){
+						
+
+						textBox.value = "Planet: "+img.id.toString()+"\n"+
+						"Gravity: "+Math.abs(gravity).toString()+"m/s^2"+"\n"+
+						"Velocity X: "+balls[i].velocityX.toString()+"m/s"+"\n"+
+						"Velocity Y: "+balls[i].velocityY.toString()+"m/s"+"\n"+
+						"Displacement X: "+balls[i].centerX.toString()+"m"+"\n"+
+						"Displacement Y: "+(-1*balls[i].centerY+530).toString()+"m"+"\n"+
+						"Time Passed: "+balls[i].secondsPassed.toString()+"s";
+					}
+				}
+			}
+			
+			// update screen every 10 milliseconds
+			setInterval(updateScreen,10);
+			
+			
+		</script>
+	</body>
+</html>
